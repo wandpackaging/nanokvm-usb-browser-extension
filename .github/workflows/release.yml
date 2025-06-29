@@ -1,0 +1,111 @@
+---
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    environment:
+      name: "release"
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+          package_json_file: NanoKVM-USB/desktop/package.json
+
+      - name: Setup node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
+          cache: "pnpm"
+          cache-dependency-path: NanoKVM-USB/desktop/pnpm-lock.yaml
+
+      - name: Build
+        run: |
+          cd NanoKVM-USB/browser/
+          pnpm install
+          pnpm build
+
+      - name: Update version
+        run: |
+          tag="$(cd NanoKVM-USB && git describe --tags)"
+          sed -i "s|%VERSION%|${tag/v}|" ./manifest.json
+
+      - name: Pack extension
+        run: |
+          cp -r NanoKVM-USB/browser/dist/* ./
+          zip --recurse-paths nanokvm-usb-browser-extension.zip --exclude "NanoKVM-USB/*" -- *
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: "chrome-extension"
+          path: "nanokvm-usb-browser-extension.zip"
+
+  release:
+    name: Create release
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: "release"
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Download binaries
+        uses: actions/download-artifact@v4
+        with:
+          path: "artifacts"
+
+      - name: Stash artifacts
+        run: |
+          mkdir dist
+          mv artifacts/*/* dist/
+
+      - name: Calculate checksums
+        run: |
+          cd dist
+          sha256sum -- * | tee sha256sums.txt
+
+      - name: Get version
+        id: get-version
+        run: |
+          cd NanoKVM-USB
+          tag=$(git describe --tags)
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+
+      - name: Create tag
+        id: create-tag
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          tag_prefix: ""
+          custom_tag: "${{ steps.get-version.outputs.tag }}"
+          github_token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Create release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          release_name: "${{ steps.create-tag.outputs.new_tag }}"
+          tag: "${{ steps.create-tag.outputs.new_tag }}"
+          file: dist/*
+          file_glob: true
+          overwrite: true
