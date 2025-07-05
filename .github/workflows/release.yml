@@ -53,10 +53,10 @@ jobs:
       - name: Upload extension to webstore
         run: |
           pnpx chrome-webstore-upload-cli \
-            --extension-id ${{ env.CHROME_EXTENSION_ID }} \
-            --client-id ${{ secrets.GOOGLE_CLIENT_ID }} \
-            --client-secret ${{ secrets.GOOGLE_CLIENT_SECRET }} \
-            --refresh-token ${{ secrets.GOOGLE_REFRESH_TOKEN }} \
+            --extension-id '${{ vars.CHROME_EXTENSION_ID }}' \
+            --client-id '${{ secrets.GOOGLE_CLIENT_ID }}' \
+            --client-secret '${{ secrets.GOOGLE_CLIENT_SECRET }}' \
+            --refresh-token '${{ secrets.GOOGLE_REFRESH_TOKEN }}' \
             --source nanokvm-usb-browser-extension.zip
 
       - name: Upload binary
