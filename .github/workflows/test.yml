@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v5
+        uses: pnpm/action-setup@v6
         with:
           version: latest
           package_json_file: NanoKVM-USB/desktop/package.json
@@ -33,5 +33,6 @@ jobs:
       - name: Build
         run: |
           cd "NanoKVM-USB/browser/"
-          pnpm install
+          pnpm install || true
+          pnpm approve-builds esbuild
           pnpm build
