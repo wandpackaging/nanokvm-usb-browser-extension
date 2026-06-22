@@ -58,6 +58,7 @@ jobs:
           REFRESH_TOKEN: "${{ secrets.GOOGLE_REFRESH_TOKEN }}"
         run: |
           pnpx chrome-webstore-upload-cli \
+            --publisher-id '${{ vars.CHROME_PUBLISHER_ID }}' \
             --extension-id '${{ vars.CHROME_EXTENSION_ID }}' \
             --source nanokvm-usb-browser-extension.zip
 
