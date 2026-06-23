@@ -51,6 +51,12 @@ jobs:
           cp -r NanoKVM-USB/browser/dist/* ./
           zip --recurse-paths nanokvm-usb-browser-extension.zip --exclude "NanoKVM-USB/*" -- *
 
+      - name: Upload binary
+        uses: actions/upload-artifact@v7
+        with:
+          name: "chrome-extension"
+          path: "nanokvm-usb-browser-extension.zip"
+
       - name: Upload extension to webstore
         env:
           CLIENT_ID: "${{ secrets.GOOGLE_CLIENT_ID }}"
@@ -61,12 +67,6 @@ jobs:
             --publisher-id '${{ vars.CHROME_PUBLISHER_ID }}' \
             --extension-id '${{ vars.CHROME_EXTENSION_ID }}' \
             --source nanokvm-usb-browser-extension.zip
-
-      - name: Upload binary
-        uses: actions/upload-artifact@v7
-        with:
-          name: "chrome-extension"
-          path: "nanokvm-usb-browser-extension.zip"
 
   release:
     name: Create release
