@@ -36,3 +36,14 @@ jobs:
           pnpm install || true
           pnpm approve-builds esbuild
           pnpm build
+
+      - name: Pack extension
+        run: |
+          cp -r NanoKVM-USB/browser/dist/* ./
+          zip --recurse-paths nanokvm-usb-browser-extension.zip --exclude "NanoKVM-USB/*" -- *
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v7
+        with:
+          name: "chrome-extension"
+          path: "nanokvm-usb-browser-extension.zip"

@@ -51,6 +51,12 @@ jobs:
           cp -r NanoKVM-USB/browser/dist/* ./
           zip --recurse-paths nanokvm-usb-browser-extension.zip --exclude "NanoKVM-USB/*" -- *
 
+      - name: Upload binary
+        uses: actions/upload-artifact@v7
+        with:
+          name: "chrome-extension"
+          path: "nanokvm-usb-browser-extension.zip"
+
       - name: Upload extension to webstore
         env:
           CLIENT_ID: "${{ secrets.GOOGLE_CLIENT_ID }}"
@@ -61,12 +67,6 @@ jobs:
             --publisher-id '${{ vars.CHROME_PUBLISHER_ID }}' \
             --extension-id '${{ vars.CHROME_EXTENSION_ID }}' \
             --source nanokvm-usb-browser-extension.zip
-
-      - name: Upload binary
-        uses: actions/upload-artifact@v7
-        with:
-          name: "chrome-extension"
-          path: "nanokvm-usb-browser-extension.zip"
 
   release:
     name: Create release
@@ -91,7 +91,7 @@ jobs:
       - name: Stash artifacts
         run: |
           mkdir dist
-          mv artifacts/*/* dist/
+          mv artifacts/* dist/
 
       - name: Calculate checksums
         run: |
@@ -105,19 +105,12 @@ jobs:
           tag=$(git describe --tags)
           echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
 
-      - name: Create tag
-        id: create-tag
-        uses: mathieudutour/github-tag-action@v6.2
-        with:
-          tag_prefix: ""
-          custom_tag: "${{ steps.get-version.outputs.tag }}"
-          github_token: "${{ secrets.GITHUB_TOKEN }}"
-
       - name: Create release
         uses: svenstaro/upload-release-action@v2
         with:
-          release_name: "${{ steps.create-tag.outputs.new_tag }}"
-          tag: "${{ steps.create-tag.outputs.new_tag }}"
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          release_name: "${{ steps.get-version.outputs.tag }}"
+          tag: "${{ steps.get-version.outputs.tag }}"
           file: dist/*
           file_glob: true
           overwrite: true
